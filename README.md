@@ -11,6 +11,10 @@ For each instruction, the script:
    - Keys are ingredient names.
    - Values are lists of tuples in the format `(start, end, "INGREDIENT")`.
   
+**labeling_instructions_snorkel.py** using snorkel with four label functions to annotate instructions.
+
+**training_robertabase.py** trained a RoBERTa-base model to implements NER task for ingredients.
+  
 
   
 
