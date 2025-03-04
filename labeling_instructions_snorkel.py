@@ -1,67 +1,90 @@
-
 import pandas as pd
 import re
-from snorkel.labeling import labeling_function, PandasLFApplier, LFAnalysis
 import spacy
+import os
+from snorkel.labeling import labeling_function, PandasLFApplier, LFAnalysis
+from fuzzywuzzy import process
 
-# Load SpaCy model
+###############################################################################
+# 1. Load data
+###############################################################################
+
+# Ensure data files exist
+if not os.path.exists("datafile/split_instructions_spacy.csv"):
+    raise FileNotFoundError("File not found: datafile/split_instructions_spacy.csv")
+
+if not os.path.exists("datafile/fitlered_ingredient_names.csv"):
+    raise FileNotFoundError("File not found: datafile/fitlered_ingredient_names.csv")
+
+# Read data
+instructions_df = pd.read_csv("datafile/split_instructions_spacy.csv")
+ingredients_df = pd.read_csv("datafile/fitlered_ingredient_names.csv", header=None)
+
+# Ensure correct column names
+if "instructions" in instructions_df.columns:
+    instruction_col = "instructions"
+elif "instruction" in instructions_df.columns:
+    instruction_col = "instruction"
+else:
+    raise KeyError("Missing 'instructions' or 'instruction' column in dataset.")
+
+instructions_df["instructions_checked"] = instructions_df[instruction_col].fillna("").astype(str)
+
+# Process ingredient data
+if 1 not in ingredients_df.columns:
+    raise ValueError("Missing expected ingredient column (index 1) in CSV.")
+
+known_ingredients = ingredients_df[1].dropna().tolist()
+if not known_ingredients:
+    raise ValueError("known_ingredients list is empty! Check the CSV file.")
+
+# Preload SpaCy model to improve performance
 nlp = spacy.load("en_core_web_sm")
 
-# Read the instructions data into a DataFrame
-instructions_df = pd.read_csv('/content/drive/MyDrive/dissertation/split_instructions_spacy.csv')
-instructions_df['instructions'] = instructions_df['instruction'].fillna("").astype(str)
+###############################################################################
+# 2. Define Labeling Functions
+###############################################################################
 
-# Read the known ingredients
-ingredients = pd.read_csv('/content/drive/MyDrive/dissertation/fitlered_ingredient_names.csv', header=None)
-known_ingredients = ingredients[1].dropna().tolist()
-
-# Define label categories
-INGREDIENT = 1
-ABSTAIN = -1
-
-# Ingredient list
-ingredient_list = known_ingredients
-
-# Define labeling functions
 @labeling_function()
 def lf_ingredient_lookup(x):
-    for ingredient in ingredient_list:
-        if ingredient in x.instructions.lower():
-            return INGREDIENT
-    return ABSTAIN
-
-@labeling_function()
-def lf_regex(x):
-    pattern = r'\b\d+\s(cups?|tsps?|tablespoons?|ounces?|grams?|pinch)\s\w+\b'
-    if re.search(pattern, x.instructions.lower()):
-        return INGREDIENT
-    return ABSTAIN
+    """Exact ingredient match"""
+    for i, ingredient in enumerate(known_ingredients):
+        if ingredient.lower() in x.instructions_checked.lower():
+            return i
+    return INGREDIENT_NOT_FOUND
 
 @labeling_function()
 def lf_context(x):
-    doc = nlp(x.instructions)
+    """Check dependency tree for cooking verbs"""
+    if not x.instructions_checked.strip():
+        return INGREDIENT_NOT_FOUND
+    doc = nlp(x.instructions_checked)
     for token in doc:
-        if token.lemma_ in ingredient_list and token.head.lemma_ in ["add", "mix", "pour"]:
-            return INGREDIENT
-    return ABSTAIN
+        idx = find_ingredient_index_in_list(token.lemma_.lower(), known_ingredients)
+        if idx != INGREDIENT_NOT_FOUND:
+            return idx
+    return INGREDIENT_NOT_FOUND
 
-@labeling_function()
-def lf_dependency_parse(x):
-    doc = nlp(x.instructions)
-    for token in doc:
-        if token.lemma_ in ingredient_list and token.dep_ in ["dobj", "pobj"]:
-            return INGREDIENT
-    return ABSTAIN
+# Assemble labeling functions
+lfs = [lf_ingredient_lookup, lf_context]
 
-# Apply the labeling functions
-lfs = [lf_ingredient_lookup, lf_regex, lf_context, lf_dependency_parse]
+###############################################################################
+# 3. Snorkel Processing
+###############################################################################
+
 applier = PandasLFApplier(lfs=lfs)
 L_train = applier.apply(df=instructions_df)
 
-# Analyze the performance of the labeling functions
-summary = LFAnalysis(L=L_train, lfs=lfs).lf_summary()
-print(summary)
+# Check the effectiveness of LFs
+print(LFAnalysis(L=L_train, lfs=lfs).lf_summary())
 
-# Save the labeled results to the DataFrame
-instructions_df['label'] = L_train.max(axis=1)  # Use the max label across all label functions for each row
-instructions_df.to_csv('/content/drive/MyDrive/dissertation/labeled_instructions.csv', index=False)
+# Generate final labels
+instructions_df["label"] = L_train.max(axis=1)
+
+# Count occurrences of -1 labels
+print("Number of -1 labels:", (instructions_df["label"] == -1).sum())
+
+# Ensure `result/` directory exists
+os.makedirs("result", exist_ok=True)
+instructions_df.to_csv("result/labeled_instructions.csv", index=False)
+print("Labeled instructions saved to result/labeled_instructions.csv")
