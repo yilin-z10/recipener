@@ -24,8 +24,8 @@ This project provides a pipeline for extracting ingredients from cooking instruc
 ## 📂 Project Structure
 
 - `ingredientmapping.py` - Identifies and extracts known ingredients from text using regex-based matching.
-- `labelfunctionsnorkel.py` - Uses Snorkel to weakly label data by applying various labeling functions.
-- `trainingroberta.py` - Fine-tunes a RoBERTa model for named entity recognition (NER) on labeled ingredient data.
+- `labeling_instructions_snorkel.py` - Uses Snorkel to weakly label data by applying various labeling functions.
+- `training_robertabase.py` - Fine-tunes a RoBERTa model for named entity recognition (NER) on labeled ingredient data.
 
 ---
 
@@ -60,10 +60,10 @@ python ingredientmapping.py
 
 ## 🔹 Step 2: Labeling with Snorkel
 
-### **Run `labelfunctionsnorkel.py`**
+### **Run `labeling_instructions_snorkel.py`**
 This script uses Snorkel to apply labeling functions for weak supervision.
 ```bash
-python labelfunctionsnorkel.py
+python labeling_instructions_snorkel.py
 ```
 
 ### **Functionality:**
@@ -78,10 +78,10 @@ python labelfunctionsnorkel.py
 
 ## 🔹 Step 3: Training RoBERTa Model
 
-### **Run `trainingroberta.py`**
+### **Run `training_robertabase.py`**
 This script fine-tunes a RoBERTa-based model for Named Entity Recognition (NER) on ingredient mentions.
 ```bash
-python trainingroberta.py
+python training_robertabase.py
 ```
 
 ### **Functionality:**
