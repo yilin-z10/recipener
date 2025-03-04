@@ -101,12 +101,6 @@ python training_robertabase.py
 
 ---
 
-## 🚀 Usage Summary
-1. **Run `ingredientmapping.py`** to extract raw ingredient matches.
-2. **Run `labelfunctionsnorkel.py`** to generate labeled data using Snorkel.
-3. **Run `trainingroberta.py`** to train a RoBERTa-based NER model on the labeled data.
-
----
 
 ## 📌 Notes
 - Ensure all required datasets are in the correct directories before running scripts.
