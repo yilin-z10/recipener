@@ -1,12 +1,14 @@
 import pandas as pd
 import re
 import spacy
+from ast import literal_eval
 from snorkel.labeling import labeling_function, PandasLFApplier, LFAnalysis
 
 ###############################################################################
 # 1. Load data
 ###############################################################################
 instructions_df = pd.read_csv('/datafile/split_instructions_spacy.csv')
+#instructions_df = pd.read_csv('/datafile/tryyy.csv')
 instructions_df['instructions'] = instructions_df['instruction'].fillna("").astype(str)
 
 ingredients = pd.read_csv('/datafile/fitlered_ingredient_names.csv', header=None)
@@ -145,10 +147,6 @@ def lf_ingredient_lookup(x):
             return i
     return INGREDIENT_NOT_FOUND
 
-@labeling_function()
-def lf_spacy_extraction(x):
-    candidate_name = extract_ingredient_name_only(x.instructions)
-    return find_ingredient_index_in_list(candidate_name, known_ingredients)
 
 @labeling_function()
 def lf_dependency_parse(x):
@@ -180,7 +178,6 @@ def lf_simple_regex(x):
 ###############################################################################
 lfs = [
     lf_ingredient_lookup,
-    lf_spacy_extraction,
     lf_context,
     lf_dependency_parse,
     lf_simple_regex
@@ -220,4 +217,5 @@ instructions_df['bio_labels'] = bio_labels
 
 # Save to file
 instructions_df.to_csv('/result/labeled_instructions_bio.csv', index=False)
+#instructions_df.to_csv('/result/testbio.csv', index=False)
 print("Labeled instructions with BIO format saved to /result/labeled_instructions_bio.csv")
