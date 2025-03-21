@@ -9,7 +9,8 @@ from transformers import (
 )
 from sklearn.metrics import f1_score, accuracy_score
 from seqeval.metrics import classification_report
-
+import numpy as np
+from ast import literal_eval
 
 def preprocess_test_data(df, tokenizer, label_map):
     """
@@ -24,31 +25,56 @@ def preprocess_test_data(df, tokenizer, label_map):
 
 def compute_metrics(pred):
     """
-    Computes accuracy, F1 score and classification report for BIO evaluation.
+    Computes accuracy, F1 score, error rate, and classification report for BIO evaluation.
     """
     labels = pred.label_ids
     preds = pred.predictions.argmax(-1)
 
     true_labels = []
     pred_labels = []
+    f1_scores = []  # For standard deviation calculation
 
     for i in range(len(labels)):
         true_seq = []
         pred_seq = []
         for j in range(len(labels[i])):
-            if labels[i][j] != -100:
+            if labels[i][j] != -100:  # Ignore special tokens
                 true_seq.append(id2label[labels[i][j]])
                 pred_seq.append(id2label[preds[i][j]])
         true_labels.append(true_seq)
         pred_labels.append(pred_seq)
 
+        # Calculate F1 score for each instance
+        f1 = f1_score(true_seq, pred_seq, average='weighted')
+        f1_scores.append(f1)
+
+    # Calculate accuracy
     acc = accuracy_score(true_labels, pred_labels)
-    f1 = f1_score(true_labels, pred_labels)
+
+    # Calculate F1 score (overall)
+    f1 = f1_score(true_labels, pred_labels, average='weighted')
+
+    # Calculate standard deviation of F1 score
+    sd_f1 = np.std(f1_scores)
+
+    # Calculate error rate
+    incorrect_labels = 0
+    total_labels = 0
+    for i in range(len(labels)):
+        for j in range(len(labels[i])):
+            if labels[i][j] != -100:
+                total_labels += 1
+                if labels[i][j] != preds[i][j]:
+                    incorrect_labels += 1
+    error_rate = incorrect_labels / total_labels
+
     report = classification_report(true_labels, pred_labels, output_dict=False)
 
     return {
         "accuracy": acc,
         "f1": f1,
+        "sd_f1": sd_f1,
+        "error_rate": error_rate,
         "report": report
     }
 
