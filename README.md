@@ -1,20 +1,7 @@
 # recipener
 Identifying Ingredients from Recipe Instructions Using a Weakly Supervised Approach
 
-**recipe_database_construction.py** is used to annotate instruction manually. This script processes each original sentence one at a time, ensuring a focused and detailed annotation process.
 
-**ingredientsmapping_SentenceSeg_traditional.py** is a script designed for annotating recipe instructions. It takes a list of known ingredients and instruction sentences as input and maps these ingredients to the sentences by identifying their positions. 
-For each instruction, the script:
-1. Checks if any known ingredient is present in the text as a substring.
-2. Records the start and end indices of each matched ingredient.
-3. Stores the results in a dictionary, where:
-   - Keys are ingredient names.
-   
-   - Values are lists of tuples in the format `(start, end, "INGREDIENT")`.
-  
-**labeling_instructions_snorkel.py** using snorkel with four label functions to annotate instructions.
-
-**training_robertabase.py** trained a RoBERTa-base model to implements NER task for ingredients.
 
 
 # Recipe Ingredient Extraction Pipeline with Weak Supervision
@@ -23,9 +10,10 @@ This project provides a pipeline for extracting ingredients from cooking instruc
 
 ## 📂 Project Structure
 
-- `ingredientmapping.py` - Identifies and extracts known ingredients from text using regex-based matching.
+- `ingredientsmapping.py` - Identifies and extracts known ingredients from text using regex-based matching.
 - `labeling_instructions_snorkel.py` - Uses Snorkel to weakly label data by applying various labeling functions.
-- `training_robertabase.py` - Fine-tunes a RoBERTa model for named entity recognition (NER) on labeled ingredient data.
+- `training_robertabase.py` - Fine-tunes a RoBERTa model for NER on labeled ingredient data.
+
 
 ---
 
