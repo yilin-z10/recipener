@@ -57,6 +57,7 @@ def convert_to_bio_format(instructions_df, known_ingredients):
                     labels[token_idx] = 'B-INGREDIENT'  # First occurrence of ingredient
                 else:
                     labels[token_idx] = 'I-INGREDIENT'  # Subsequent occurrence of the same ingredient
+        #BIO Format
 
         bio_labels.append(labels)
 
