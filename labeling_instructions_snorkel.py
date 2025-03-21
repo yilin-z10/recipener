@@ -7,11 +7,11 @@ from snorkel.labeling import labeling_function, PandasLFApplier, LFAnalysis
 ###############################################################################
 # 1. Load data
 ###############################################################################
-instructions_df = pd.read_csv('/datafile/split_instructions_spacy.csv')
-#instructions_df = pd.read_csv('/datafile/tryyy.csv')
+instructions_df = pd.read_csv('datafile/split_instructions_spacy.csv')
+#instructions_df = pd.read_csv('datafile/tryyy.csv')
 instructions_df['instructions'] = instructions_df['instruction'].fillna("").astype(str)
 
-ingredients = pd.read_csv('/datafile/fitlered_ingredient_names.csv', header=None)
+ingredients = pd.read_csv('datafile/fitlered_ingredient_names.csv', header=None)
 known_ingredients = ingredients[1].dropna().tolist()
 
 # Load SpaCy model
@@ -216,6 +216,6 @@ bio_labels = convert_to_bio_format(instructions_df, L_train, known_ingredients)
 instructions_df['bio_labels'] = bio_labels
 
 # Save to file
-instructions_df.to_csv('/result/labeled_instructions_bio.csv', index=False)
-#instructions_df.to_csv('/result/testbio.csv', index=False)
-print("Labeled instructions with BIO format saved to /result/labeled_instructions_bio.csv")
+instructions_df.to_csv('result/labeled_instructions_bio.csv', index=False)
+#instructions_df.to_csv('result/testbio.csv', index=False)
+print("Labeled instructions with BIO format saved to result/labeled_instructions_bio.csv")
